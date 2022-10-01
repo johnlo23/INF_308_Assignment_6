@@ -203,6 +203,9 @@ def feature_interact(f_feature, f_feature_dict):
         if this_feature['equipped']:
             print("There is already a capacitor in the slot.")
         else:
+            print("You can see the hyperflux capacitor is missing from the engine.\n"
+                  "You think to yourself, 'We are not moving without the capacitor in place...'\n"
+                  "'Can I fix this?'")
             # Succeed or do not succeed inserting capacitor
             success = insert_capacitor(f_feature_dict)
 
@@ -322,6 +325,7 @@ def insert_capacitor(f_feature_dict):
     # If player has not equipped the gloves
     if not item_dict['gloves']['equipped']:
         # Warning message
+        print()
         print("Working on electrical equipment could be dangerous.")
         print("There may be safety precautions to think of before proceeding.")
         print("Do you still want to work on the engine?")
@@ -407,7 +411,7 @@ def equip_gloves():
 
     # If the player did find the gloves
     else:
-        print("You smartly put the rubber gloves on your hands")
+        print("You smartly put the rubber gloves on your hands.")
         this_item['equipped'] = True
 
 
@@ -468,10 +472,7 @@ feature_dict['helm'] = {'type': 'room',
 feature_dict['engine room'] = {'type': 'room',
                                'description': "The engine room is lined with wires and pipes.\n"
                                               "While you are not an engineer, you have some rudimentary knowledge of the engine systems.\n"
-                                              "Interstellar Drive is electrically powered by a sealed nuclear fusion battery.\n"
-                                              "You can see the hyperflux capacitor is missing from the engine.\n"
-                                              "You think to yourself, 'We are not moving without the capacitor in place...'\n"
-                                              "'Can I fix this?'"}
+                                              "Interstellar Drive is electrically powered by a sealed nuclear fusion battery."}
 feature_dict['plant'] = {'type': 'object',
                          'item': 'key',
                          'description': "The plant is a happy rubber tree in a wicker basket."}
