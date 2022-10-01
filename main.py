@@ -28,6 +28,7 @@ def get_yn():
 # Exits the game when play is over
 def quit_game():
     print()
+    print(f"Your final score is: {score}")
     print('Thanks for playing!')
     quit()
 
@@ -260,6 +261,12 @@ def feature_interact(f_feature, f_feature_dict):
                     print("in a Fligiborppian underground mining camp.")
                     print('I wish you better luck in future adventures...')
                     quit_game()
+
+                # If aliens do not invade, adjust score
+                else:
+                    global score
+                    score += this_feature['points']
+
         # Player chose not to use Radio
         else:
             print("You can always try to call Earth later.")
@@ -310,6 +317,9 @@ def start_engine(f_feature_dict):
             # Engine does not explode
             print("The engines groan a little and then whir back to life!")
             print("Excellent job saving the crew and continuing the mission!")
+            # Reference global score
+            global score
+            score += f_feature_dict['ship controls']['points']
             quit_game()
 
     # Player has not equipped the engine with a capacitor
@@ -431,11 +441,12 @@ def ship_explode(f_feature_dict):
             return False
 
 
-
 # Main
-
 # Initialize inventory
 inventory_list = []
+
+# Initialize score
+score = 0
 
 # Set the starting room
 room = 'quarters'
@@ -483,18 +494,21 @@ feature_dict['table'] = {'type': 'object',
                          'description': "This is a simple metal table."}
 feature_dict['ship controls'] = {'type': 'interact',
                                  'title': 'ship controls',
+                                 'points': 20,
                                  'action text': "The ship's control panel has a flashing button labeled 'Resume Autopilot'",
                                  'action': 'press autopilot',
                                  'requires': 'capacitor',
                                  'description': "This is where the helmsman 'flies' the ship."}
 feature_dict['engine'] = {'type': 'interact',
                           'title': 'engine',
+                          'points': 10,
                           'equipped': None,
                           'action text': "There is an empty capacitor slot.",
                           'action': 'insert a capacitor',
                           'description': "The engine appears to be in good shape."}
 feature_dict['radio'] = {'type': 'interact',
                          'title': 'radio',
+                         'points': 10,
                          'action text': "You can try to call for help.",
                          'action': 'call Earth',
                          'fried': False,
@@ -530,13 +544,17 @@ feature_dict['red door'] = {'type': 'door',
 # Describes the details and state of all findable items
 item_dict = {}
 item_dict['key'] = {'taken': False,
+                    'points': 10,
                     'description': "There is a shiny piece of metal. It looks like a key."}
 item_dict['gloves'] = {'taken': False,
+                       'points': 10,
                        'equipped': False,
                        'description': "There is a pair of heavy canvas gloves with a thick rubber coating."}
 item_dict['old capacitor'] = {'taken': False,
+                              'points': 5,
                               'description': "There is the fallen capacitor. It looks alright. Maybe you should reinsert it in the engine?"}
 item_dict['new capacitor'] = {'taken': False,
+                              'points': 10,
                               'description': "There is a capacitor that looks a lot like the one that fell from the engine."}
 
 # Welcome Message
@@ -556,7 +574,8 @@ print(" -" * 23)
 # Main loop to call functions until game ends or player quits
 while True:
     print()
-    # Room title
+    # Room title and score
+    print(f"Your Score: {score}")
     print(f"You are in {room_dict[room]['title']}.")
     print()
     # Menu items
@@ -573,6 +592,7 @@ while True:
         # If player picked up an item, add it to the inventory
         if item is not None:
             inventory_list.append(item)
+            score += item_dict[item]['points']
 
     # If the player can interact with the item
     if feature_dict[feature]['type'] == 'interact':
