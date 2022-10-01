@@ -2,12 +2,8 @@
 # Text adventure game
 # John Logiudice
 
-import random
-import time
-
-# global variable for inventory
-inventory_list = []
-
+import random  # Random will be used for matters of chance
+import time    # Time will be used for dramatic delays
 
 # Check if string can be converted to an integer
 def is_int(f_string):
@@ -21,20 +17,22 @@ def is_int(f_string):
 # Get and confirm a Y of N answer
 def get_yn():
     while True:
+        # Convert response to lower case since case does not matter
         response = input("Please enter (Y)es or (N)o: ").lower()
 
-        # Only check first letter in case user types Yes or No
+        # Only check first letter in case player types Yes or No
         if response[0] in ('y', 'n'):
             return response
 
 
+# Exits the game when play is over
 def quit_game():
     print()
     print('Thanks for playing!')
     quit()
 
 
-# Print the room menu and get response
+# Print the room menu and get player response
 def room_menu(f_room, f_room_dict):
     this_room_feature = f_room_dict[f_room]['features']
 
@@ -42,12 +40,12 @@ def room_menu(f_room, f_room_dict):
     for i in range(0, len(this_room_feature)):
         print(f"{i + 1}. {this_room_feature[i]}")
 
-    # print global options
+    # print general options
     print()
     print("I. for inventory")
     print("Q. to quit game")
 
-    # loop until user chooses valid menu response
+    # loop until player chooses valid menu response
     while True:
         response = input("What would you like to look at (enter the number)? ")
         # Check that integer was entered
@@ -57,33 +55,38 @@ def room_menu(f_room, f_room_dict):
             # Return feature value
             if int(response) in range(0, len(this_room_feature)):
                 return f_room_dict[f_room]['features'][response]
+        # Player chose to quit
         elif response.lower() in ('q', 'quit'):
             quit_game()
+        # Player wants to see Inventory
         elif response.lower() in ('i', 'inventory'):
             print_inventory()
+        # Invalid choice
         else:
             print('Please enter a valid menu choice')
 
 
-# Print item found in feature and ask if user wants to take it
+# Print item found in feature and ask if player wants to take it
 def feature_menu(f_feature, f_feature_dict, f_item_dict):
     this_feature_item = f_item_dict[f_feature_dict[f_feature]['item']]
 
-    # If item is not already found, ask user Y/N to take it
+    # If item is not already found, ask player Y/N to take it
     if not this_feature_item['taken']:
         print(this_feature_item['description'])
         print(f"Would you like to take the {f_feature_dict[f_feature]['item']}?")
         response = get_yn()
         print()
 
+        # Player chose to take item
         if response == 'y':
             this_feature_item['taken'] = 'True'
             print(f"You took the {f_feature_dict[f_feature]['item']}.")
             return f_feature_dict[f_feature]['item']
+        # Player decided not to take item
         else:
             print(f"You left the {f_feature_dict[f_feature]['item']} where it is.")
             return None
-    # User already found this item
+    # player already found this item
     else:
         print(f"There is nothing to see in the {f_feature}.")
         return None
@@ -101,38 +104,45 @@ def door_state(f_feature, f_feature_dict, f_room):
         print(f"Would you like to open the {this_feature['title']}?")
         response = get_yn()
 
+        # Open the door
         if response == 'y':
+            # Is door locked?
             if this_feature['locked']:
+                # Player found key
                 if unlock_door(this_feature):
                     print()
                     print(f"You unlock the {this_feature['title']} with the key.")
                     this_feature['state'] = 'open'
                     print(f"The {this_feature['title']} is now open")
+                # Player did not find the key
                 else:
                     print()
                     print(f"The {this_feature['title']} is locked. Do you have the key?")
+            # Door was not locked
             else:
                 print()
                 this_feature['state'] = 'open'
                 print(f"The {this_feature['title']} is now open")
 
-    # If door is currently open
+    # If door is currently open, ask if Player wants to close it
     else:
         print()
         print(f"Would you like to close the {this_feature['title']}?")
         response = get_yn()
 
+        # Player chose to close door
         if response == 'y':
             print()
             this_feature['state'] = 'closed'
             print(f"The {this_feature['title']} is now closed")
 
-    # If the door is now in an open state, ask if user wants to walk through it
+    # If the door is now in an open state, ask if player wants to walk through it
     if this_feature['state'] == 'open':
         print()
         print(f"Would you like to walk through the {this_feature['title']}?")
         response = get_yn()
 
+        # Player chose to walk through door
         if response == 'y':
             # If reply is yes, call function to swap rooms
             f_room = leave_room(f_feature, f_feature_dict)
@@ -150,9 +160,11 @@ def leave_room(f_feature, f_feature_dict):
 
 # Unlock a door if key in inventory
 def unlock_door(f_this_feature):
+    # Player found Key
     if 'key' in inventory_list:
         f_this_feature['locked'] = False
         return True
+    # Player did not find key
     else:
         return False
 
@@ -161,41 +173,76 @@ def unlock_door(f_this_feature):
 def print_inventory():
     print()
     print("You are carrying: ", end="")
+    # If there are items in inventory
     if len(inventory_list) > 0:
         item_string = ""
         for item in inventory_list:
             item_string += item + ", "
         item_string = item_string.rstrip(" ").rstrip(",")
         print(item_string)
+    # If there are no items in the inventory
     else:
         print("nothing")
 
-
+# For features that are interactable
 def feature_interact(f_feature, f_feature_dict):
     this_feature = f_feature_dict[f_feature]
-    if this_feature['action'] == 'press autopilot':
+
+    # Ship Controls
+    if this_feature['title'] == 'ship controls':
+        # Show avaliable action
         print(this_feature['action text'])
         print(f"Would you like to {this_feature['action']}?")
         response = get_yn()
         if response == 'y':
             start_engine(f_feature_dict)
-    elif this_feature['action'] == 'insert a capacitor':
+
+    # Engine
+    elif this_feature['title'] == 'engine':
+        # Check if capacitor is already in engine
         if this_feature['equipped']:
             print("There is already a capacitor in the slot.")
         else:
-            insert_capacitor(f_feature_dict)
-    elif this_feature['action'] == 'call Earth':
+            # Succeed or do not succeed inserting capacitor
+            success = insert_capacitor(f_feature_dict)
+
+            # If success is False, player did not equip gloves and will die
+            if not success:
+                # Show failure message
+                print()
+                time.sleep(2)
+                print()
+                print('       !!!!!!! zzzzZAPpppp !!!!!!!')
+                print('I guess you should have listened to the warnings.')
+                print('The moment you inserted the capacitor, two terawatts of electricity flowed')
+                print('to the capacitor then through your hands straight through your heart and')
+                print('other vital organs exiting from your feet into the hull of the ship.')
+                print('Obviously you have expired and will be no help to the crew.')
+                print('I wish you better luck in future adventures...')
+
+                quit_game()
+
+    # Radio
+    elif this_feature['title'] == 'radio':
         print(this_feature['action text'])
         print(f"Would you like to {this_feature['action']}?")
         response = get_yn()
+        # Player chose to use the radio
         if response == 'y':
+            # Check if radio is not working
             if this_feature['fried']:
                 print()
                 print('Sorry, the radio appears to be out of commission.')
+            # If radio is working
             else:
+                # Chance that aliens intercept radio call and invade ship
                 aliens_invade = call_earth()
-                this_feature['fried'] = True;
+                # The radio always breaks after one use
+                this_feature['fried'] = True
                 if aliens_invade:
+                    # Print failure message
+                    print()
+                    print("- " * 25)
                     print()
                     print("You feel a strong vibration run through the ship.")
                     time.sleep(1)
@@ -208,12 +255,14 @@ def feature_interact(f_feature, f_feature_dict):
                     print("It so happens that Fligiborp does have lifeforms and contains a perfect environment for Human life.")
                     print("Unfortunately for you and the ship's crew, the rest of your lives will be spent as forced labor")
                     print("in a Fligiborppian underground mining camp.")
-                    print('I wish you better luck in future adventures')
+                    print('I wish you better luck in future adventures...')
                     quit_game()
+        # Player chose not to use Radio
         else:
             print("You can always try to call Earth later.")
 
 
+# Print message from Earth and determine if aliens invade ship
 def call_earth():
     print()
     print("You press the 911 button and wait for a response")
@@ -228,36 +277,70 @@ def call_earth():
     print()
     print("Before you can say anything, a small puff of white smoke rises from the radio.")
 
-    # Calculate 50/50 chance that aliens invade the ship after using the radio
+    # Calculate 60/40 chance that aliens invade the ship after using the radio
     chance = random.randint(0, 100)
     if chance > 60:
+        # Aliens invade
         return True
     else:
+        # Aliens do not invade
         return False
 
 
+# Attempt to start engine and print success or failure message
 def start_engine(f_feature_dict):
     print()
+    # Player equipped the engine with a capacitor
     if f_feature_dict['engine']['equipped']:
         print("You press the Autopilot button.")
         time.sleep(2.0)
         print()
+        # Check if engine explodes or not
         if ship_explode(f_feature_dict):
+            # Engine explodes failure message
             print('       !!!!!!! KABLAM !!!!!!!')
             print('The old capacitor must have been damaged.')
             print('The ship and its entire crew have perished.')
-            print('I wish you better luck in future adventures')
+            print('I wish you better luck in future adventures...')
             quit_game()
         else:
+            # Engine does not explode
             print("The engines groan a little and then whir back to life!")
             print("Excellent job saving the crew and continuing the mission!")
             quit_game()
+
+    # Player has not equipped the engine with a capacitor
     else:
         print("Nothing happens. Maybe you should check the Engine Room.")
 
 
+# Check if player is wearing gloves and which capacitor to install
 def insert_capacitor(f_feature_dict):
+    # Initialize success as True
+    success = True
+
+    # If player has not equipped the gloves
+    if not item_dict['gloves']['equipped']:
+        # Warning message
+        print("Working on electrical equipment could be dangerous.")
+        print("There may be safety precautions to think of before proceeding.")
+        print("Do you still want to work on the engine?")
+        response = get_yn()
+
+        # Player decided not ignore warning - Guaranteed failure
+        if response == 'y':
+            success = False
+
+        # Player heeded warning and found gloves so puts them on
+        else:
+            print()
+            print('That is a good decision.')
+            equip_gloves()
+            return True
+
+    # Player has equipped the gloves
     print()
+    # If player found both capacitors, ask which to equip in engine
     if 'new capacitor' in inventory_list and 'old capacitor' in inventory_list:
         print("You are carrying the old capacitor and the new capacitor.")
         print()
@@ -265,6 +348,7 @@ def insert_capacitor(f_feature_dict):
         print("2. New Capacitor")
         # Loop until valid choice
         while True:
+            # Ask user which capacitor to insert
             response = input("Which would you like to insert? ")
             if is_int(response):
                 response = int(response)
@@ -276,6 +360,7 @@ def insert_capacitor(f_feature_dict):
                     break
             print("Please enter 1 or 2.")
 
+    # Player only found old capacitor
     elif 'old capacitor' in inventory_list:
         print("You are carrying the old capacitor.")
         print("Would you like to insert it?")
@@ -284,6 +369,8 @@ def insert_capacitor(f_feature_dict):
             equip_capacitor(f_feature_dict, 'old capacitor')
         else:
             print("You are still carrying the old capacitor.")
+
+    # Player only found new capacitor
     elif 'new capacitor' in inventory_list:
         print("You are carrying the new capacitor.")
         print("Would you like to insert it?")
@@ -292,15 +379,36 @@ def insert_capacitor(f_feature_dict):
             equip_capacitor(f_feature_dict, 'new capacitor')
         else:
             print("You are still carrying the old capacitor.")
+
+    # Player found neither capacitor
     else:
-        print('You are do not have a capacitor to insert.')
+        print('You do not have a capacitor to insert.')
+        # Success is still True since ship did not explode
+        success = True
+
+    return success
 
 
+# Update dictionary with capacitor inserted
 def equip_capacitor(f_feature_dict, capacitor_type):
     inventory_list.remove(capacitor_type)
     f_feature_dict['engine']['equipped'] = capacitor_type
     print()
     print(f"You are no longer carrying the {capacitor_type}.")
+
+
+# Update dictionary with gloves equipped
+def equip_gloves():
+    this_item = item_dict['gloves']
+
+    # If the player did not find the gloves
+    if not this_item['taken']:
+        print("Maybe there are electrician's gloves hidden somewhere on this ship.")
+
+    # If the player did find the gloves
+    else:
+        print("You smartly put the rubber gloves on your hands")
+        this_item['equipped'] = True
 
 
 # Determine if the ship explodes
@@ -312,7 +420,7 @@ def ship_explode(f_feature_dict):
     else:
         # If old capacitor is used
         # Use random to select a number, where > 80 means ship explodes
-        chance = random.randint(0,100)
+        chance = random.randint(0, 100)
         if chance >= 80:
             return True
         else:
@@ -321,9 +429,14 @@ def ship_explode(f_feature_dict):
 
 
 # Main
-#room = 'quarters'
-room = 'helm'
 
+# Initialize inventory
+inventory_list = []
+
+# Set the starting room
+room = 'quarters'
+
+# Describes features available in each room
 room_dict = {}
 room_dict['quarters'] = {'features': ('quarters', 'bed', 'table', 'grey door'),
                          'title': 'your quarters'}
@@ -334,6 +447,7 @@ room_dict['helm'] = {'features': ('helm', 'blue door', 'ship controls', 'radio')
 room_dict['engine room'] = {'features': ('engine room', 'engine', 'cabinet', 'floor', 'red door'),
                             'title': 'the engine room'}
 
+# Describes the details and state of all features
 feature_dict = {}
 feature_dict['quarters'] = {'type': 'room',
                             'description': "You are in your quarters, a tiny space with just enough room for a table and bed.\n"
@@ -367,16 +481,19 @@ feature_dict['bed'] = {'type': 'object',
 feature_dict['table'] = {'type': 'object',
                          'description': "This is a simple metal table."}
 feature_dict['ship controls'] = {'type': 'interact',
+                                 'title': 'ship controls',
                                  'action text': "The ship's control panel has a flashing button labeled 'Resume Autopilot'",
                                  'action': 'press autopilot',
                                  'requires': 'capacitor',
                                  'description': "This is where the helmsman 'flies' the ship."}
 feature_dict['engine'] = {'type': 'interact',
+                          'title': 'engine',
                           'equipped': None,
                           'action text': "There is an empty capacitor slot.",
                           'action': 'insert a capacitor',
-                          'description': "The engine appears to be in good shape except for the missing capacitor."}
+                          'description': "The engine appears to be in good shape."}
 feature_dict['radio'] = {'type': 'interact',
+                         'title': 'radio',
                          'action text': "You can try to call for help.",
                          'action': 'call Earth',
                          'fried': False,
@@ -409,16 +526,19 @@ feature_dict['red door'] = {'type': 'door',
                             'next_room': 'engine room',
                             'description': "The door is an ordinary door."}
 
+# Describes the details and state of all findable items
 item_dict = {}
 item_dict['key'] = {'taken': False,
                     'description': "There is a shiny piece of metal. It looks like a key."}
 item_dict['gloves'] = {'taken': False,
+                       'equipped': False,
                        'description': "There is a pair of heavy canvas gloves with a thick rubber coating."}
 item_dict['old capacitor'] = {'taken': False,
                               'description': "There is the fallen capacitor. It looks alright. Maybe you should reinsert it in the engine?"}
 item_dict['new capacitor'] = {'taken': False,
                               'description': "There is a capacitor that looks a lot like the one that fell from the engine."}
 
+# Welcome Message
 title = " * * * * * * * Space Adventure * * * * * * *"
 welcome_message = "You are a crew member of a spaceship travelling to Tau Ceti, a star 12 light-years from Earth.\n" \
                   "The mission is to investigate the planets around Tau Ceti to determine if life exists there and\n" \
@@ -432,22 +552,28 @@ print(title)
 print(welcome_message)
 print(" -" * 23)
 
+# Main loop to call functions until game ends or player quits
 while True:
     print()
+    # Room title
     print(f"You are in {room_dict[room]['title']}.")
     print()
+    # Menu items
     print('- - - - MENU - - - -')
     feature = room_menu(room, room_dict)
 
+    # Feature description
     print()
     print(feature_dict[feature]['description'])
     print()
     # If this feature has items to find
     if 'item' in list(feature_dict[feature]):
         item = feature_menu(feature, feature_dict, item_dict)
+        # If player picked up an item, add it to the inventory
         if item is not None:
             inventory_list.append(item)
 
+    # If the player can interact with the item
     if feature_dict[feature]['type'] == 'interact':
         feature_interact(feature, feature_dict)
 
